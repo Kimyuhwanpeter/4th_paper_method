@@ -84,6 +84,7 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                use_bias=False)(h)
     h = InstanceNormalization()(h)
     h = tf.keras.layers.ReLU()(h)   # [256, 256, 32]
+    C0 = h
 
     h = tf.keras.layers.Conv2D(filters=64,
                                kernel_size=3,
@@ -120,7 +121,7 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
     h = tf.keras.layers.ReLU()(h)   # [32, 32, 256]
     if trainable:
         h = Down_input()(h, down_input3)
-    for _ in range(4):
+    for _ in range(6):
         h = residual_block(h, 128)  # [32, 32, 256]
     C3 = h
 
@@ -133,7 +134,7 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
     h = tf.keras.layers.ReLU()(h)   # [16, 16, 512]
     if trainable:
         h = Down_input()(h, down_input4)
-    for _ in range(3):
+    for _ in range(4):
         h = residual_block(h, 256) # [16, 16, 512]
 
     C4 = h
@@ -150,7 +151,11 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
     h = tf.keras.layers.ReLU()(h)   # [32, 32, 256]
 
     h1 = tf.keras.layers.Add()([tf.keras.layers.UpSampling2D(size=(2,2))(P4),
-                               h]) # [32, 32, 256]
+                               h, C3]) # [32, 32, 256]
+
+    H1 = tf.keras.layers.Conv2D(filters=1,
+                                kernel_size=1,
+                                padding="same")(h1)
 
     P3 = tf.keras.layers.Conv2D(filters=128,
                                 kernel_size=1,
@@ -166,7 +171,11 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
     h = tf.keras.layers.ReLU()(h)   # [64, 64, 128]
 
     h2 = tf.keras.layers.Add()([tf.keras.layers.UpSampling2D(size=(2,2))(P3),
-                               h])  # [64, 64, 128]
+                               h, C2])  # [64, 64, 128]
+
+    H2 = tf.keras.layers.Conv2D(filters=1,
+                                kernel_size=1,
+                                padding="same")(h2)
 
     P2 = tf.keras.layers.Conv2D(filters=64,
                                 kernel_size=1,
@@ -182,7 +191,11 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
     h = tf.keras.layers.ReLU()(h)   # [128, 128, 64]
 
     h3 = tf.keras.layers.Add()([tf.keras.layers.UpSampling2D(size=(2,2))(P2),
-                               h])  # [128, 128, 64]
+                               h, C1])  # [128, 128, 64]
+
+    H3 = tf.keras.layers.Conv2D(filters=1,
+                                kernel_size=1,
+                                padding="same")(h3)
 
     P1 = tf.keras.layers.Conv2D(filters=32,
                                 kernel_size=1,
@@ -198,7 +211,7 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
     h = tf.keras.layers.ReLU()(h)   # [256, 256, 32]
 
     h4 = tf.keras.layers.Add()([tf.keras.layers.UpSampling2D(size=(2,2))(P1),
-                               h])  # [256, 256, 32]
+                               h, C0])  # [256, 256, 32]
 
     h = tf.keras.layers.ZeroPadding2D((3,3))(h4)
     h = tf.keras.layers.Conv2D(filters=3,
@@ -213,10 +226,10 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                       down_input2,
                                       down_input3,
                                       down_input4], 
-                              outputs=[h, h1, h2, h3, h4])
+                              outputs=[h, H1, H2, H3])
     else:
         return tf.keras.Model(inputs=inputs, 
-                              outputs=[h, h1, h2, h3, h4])
+                              outputs=[h, H1, H2, H3])
 
 def Discriminator(input_shape=(256, 256, 3),
                       dim=64,
@@ -235,7 +248,7 @@ def Discriminator(input_shape=(256, 256, 3),
     h = tf.keras.layers.LeakyReLU(alpha=0.2)(h)
 
     h = tf.keras.layers.Conv2D(dim*2, 4, strides=2, padding='same')(h)    # [128, 128, 128]
-    P2 = tf.keras.layers.Conv2D(filters=3,
+    P2 = tf.keras.layers.Conv2D(filters=1,
                                 kernel_size=4,
                                 strides=1,
                                 padding="same")(h)
@@ -244,7 +257,7 @@ def Discriminator(input_shape=(256, 256, 3),
 
     dim = min(dim * 4, dim_ * 8)
     h = tf.keras.layers.Conv2D(dim, 4, strides=2, padding='same', use_bias=False)(h)
-    P3 = tf.keras.layers.Conv2D(filters=3,
+    P3 = tf.keras.layers.Conv2D(filters=1,
                                 kernel_size=4,
                                 strides=1,
                                 padding="same")(h)
@@ -252,7 +265,7 @@ def Discriminator(input_shape=(256, 256, 3),
     h = tf.keras.layers.LeakyReLU(alpha=0.2)(h) # [64, 64, 256]
 
     h = tf.keras.layers.Conv2D(dim, 4, strides=2, padding='same', use_bias=False)(h)
-    P4 = tf.keras.layers.Conv2D(filters=3,
+    P4 = tf.keras.layers.Conv2D(filters=1,
                                 kernel_size=4,
                                 strides=1,
                                 padding="same")(h)
