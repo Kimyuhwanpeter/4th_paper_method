@@ -40,7 +40,7 @@ class Down_input(tf.keras.layers.Layer):
 
         return x
 
-def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
+def New_netowrk_for_generation(input_shape=(256, 256, 3)):
     
     def residual_block(input, filters):
 
@@ -50,7 +50,7 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                    padding="same",
                                    use_bias=False)(input)
         h = InstanceNormalization()(h)
-        h = tf.keras.layers.ReLU()(h)
+        h = tf.keras.layers.Activation("tanh")(h)
 
         h = tf.keras.layers.Conv2D(filters=filters*2,
                                    kernel_size=3,
@@ -59,22 +59,21 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                    use_bias=False)(h)
         h = InstanceNormalization()(h)
 
-        return tf.keras.layers.ReLU()(h + input)
+        return tf.keras.layers.Activation("tanh")(h + input)
 
     h = inputs = tf.keras.Input(input_shape)
-    if trainable:
-        down_input1 = tf.keras.Input((input_shape[0] // 2,
-                                       input_shape[1] // 2,
-                                       1))  # [128, 128]
-        down_input2 = tf.keras.Input((input_shape[0] // 4,
-                                      input_shape[1] // 4,
-                                      1))   # [64, 64]
-        down_input3 = tf.keras.Input((input_shape[0] // 8,
-                                      input_shape[1] // 8,
-                                      1))   # [32, 32]
-        down_input4 = tf.keras.Input((input_shape[0] // 16,
-                                      input_shape[1] // 16,
-                                      1))   # [16, 16]
+    down_input1 = tf.keras.Input((input_shape[0] // 2,
+                                    input_shape[1] // 2,
+                                    1))  # [128, 128]
+    down_input2 = tf.keras.Input((input_shape[0] // 4,
+                                    input_shape[1] // 4,
+                                    1))   # [64, 64]
+    down_input3 = tf.keras.Input((input_shape[0] // 8,
+                                    input_shape[1] // 8,
+                                    1))   # [32, 32]
+    down_input4 = tf.keras.Input((input_shape[0] // 16,
+                                    input_shape[1] // 16,
+                                    1))   # [16, 16]
     # Encode part
     h = tf.keras.layers.ZeroPadding2D((3,3))(h)
     h = tf.keras.layers.Conv2D(filters=32,
@@ -83,7 +82,7 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                padding="valid",
                                use_bias=False)(h)
     h = InstanceNormalization()(h)
-    h = tf.keras.layers.ReLU()(h)   # [256, 256, 32]
+    h = tf.keras.layers.Activation("tanh")(h)   # [256, 256, 32]
     C0 = h
 
     h = tf.keras.layers.Conv2D(filters=64,
@@ -92,9 +91,8 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                padding="same",
                                use_bias=False)(h)
     h = InstanceNormalization()(h)
-    h = tf.keras.layers.ReLU()(h)   # [128, 128, 64]
-    if trainable:
-        h = Down_input()(h, down_input1)
+    h = tf.keras.layers.Activation("tanh")(h)   # [128, 128, 64]
+    h = Down_input()(h, down_input1)
     for _ in range(1):
         h = residual_block(h, 32)   # [128, 128, 64]
     C1 = h
@@ -105,9 +103,8 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                padding="same",
                                use_bias=False)(h)
     h = InstanceNormalization()(h)
-    h = tf.keras.layers.ReLU()(h)   # [64, 64, 128]
-    if trainable:
-        h = Down_input()(h, down_input2)
+    h = tf.keras.layers.Activation("tanh")(h)   # [64, 64, 128]
+    h = Down_input()(h, down_input2)
     for _ in range(2):
         h = residual_block(h, 64)   # [64, 64, 128]
     C2 = h
@@ -118,9 +115,8 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                padding="same",
                                use_bias=False)(h)
     h = InstanceNormalization()(h)
-    h = tf.keras.layers.ReLU()(h)   # [32, 32, 256]
-    if trainable:
-        h = Down_input()(h, down_input3)
+    h = tf.keras.layers.Activation("tanh")(h)   # [32, 32, 256]
+    h = Down_input()(h, down_input3)
     for _ in range(6):
         h = residual_block(h, 128)  # [32, 32, 256]
     C3 = h
@@ -131,9 +127,8 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                padding="same",
                                use_bias=False)(h)
     h = InstanceNormalization()(h)
-    h = tf.keras.layers.ReLU()(h)   # [16, 16, 512]
-    if trainable:
-        h = Down_input()(h, down_input4)
+    h = tf.keras.layers.Activation("tanh")(h)   # [16, 16, 512]
+    h = Down_input()(h, down_input4)
     for _ in range(4):
         h = residual_block(h, 256) # [16, 16, 512]
 
@@ -148,7 +143,7 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                         padding="same",
                                         use_bias=False)(h)
     h = InstanceNormalization()(h)
-    h = tf.keras.layers.ReLU()(h)   # [32, 32, 256]
+    h = tf.keras.layers.Activation("tanh")(h)   # [32, 32, 256]
 
     h1 = tf.keras.layers.Add()([tf.keras.layers.UpSampling2D(size=(2,2))(P4),
                                h, C3]) # [32, 32, 256]
@@ -168,7 +163,7 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                         padding="same",
                                         use_bias=False)(h1)
     h = InstanceNormalization()(h)
-    h = tf.keras.layers.ReLU()(h)   # [64, 64, 128]
+    h = tf.keras.layers.Activation("tanh")(h)   # [64, 64, 128]
 
     h2 = tf.keras.layers.Add()([tf.keras.layers.UpSampling2D(size=(2,2))(P3),
                                h, C2])  # [64, 64, 128]
@@ -188,7 +183,7 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                         padding="same",
                                         use_bias=False)(h2)
     h = InstanceNormalization()(h)
-    h = tf.keras.layers.ReLU()(h)   # [128, 128, 64]
+    h = tf.keras.layers.Activation("tanh")(h)   # [128, 128, 64]
 
     h3 = tf.keras.layers.Add()([tf.keras.layers.UpSampling2D(size=(2,2))(P2),
                                h, C1])  # [128, 128, 64]
@@ -208,7 +203,7 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                         padding="same",
                                         use_bias=False)(h3)
     h = InstanceNormalization()(h)
-    h = tf.keras.layers.ReLU()(h)   # [256, 256, 32]
+    h = tf.keras.layers.Activation("tanh")(h)   # [256, 256, 32]
 
     h4 = tf.keras.layers.Add()([tf.keras.layers.UpSampling2D(size=(2,2))(P1),
                                h, C0])  # [256, 256, 32]
@@ -220,16 +215,12 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3), trainable=True):
                                padding="valid")(h)  # [256, 256, 3]
     h = tf.keras.layers.Activation("tanh")(h)
     
-    if trainable:
-        return tf.keras.Model(inputs=[inputs, 
-                                      down_input1,
-                                      down_input2,
-                                      down_input3,
-                                      down_input4], 
-                              outputs=[h, H1, H2, H3])
-    else:
-        return tf.keras.Model(inputs=inputs, 
-                              outputs=[h, H1, H2, H3])
+    return tf.keras.Model(inputs=[inputs, 
+                                    down_input1,
+                                    down_input2,
+                                    down_input3,
+                                    down_input4], 
+                            outputs=[h, H1, H2, H3])
 
 def Discriminator(input_shape=(256, 256, 3),
                       dim=64,
@@ -285,6 +276,3 @@ def Discriminator(input_shape=(256, 256, 3),
     final_feature = h
 
     return tf.keras.Model(inputs=inputs, outputs=[output, final_feature])
-
-model = New_netowrk_for_generation(trainable=True)
-model.summary()
