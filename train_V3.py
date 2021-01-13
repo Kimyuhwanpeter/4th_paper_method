@@ -413,7 +413,7 @@ def cal_loss(A2B_generator, B2A_generator, A_dis, B_dis,
                    + (tf.reduce_mean((DB_real - tf.zeros_like(DB_real))**2) + tf.reduce_mean((DB_real - tf.ones_like(DB_real))**2)) * 0.5
 
         g_loss = G_GAN_loss + Cycleloss + (A2B_id_nose_loss + A2B_id_Reyes_loss + A2B_id_Leyes_loss + A2B_id_mouth_loss) \
-                + (B2A_id_nose_loss + B2A_id_Reyes_loss + B2A_id_Leyes_loss + B2A_id_mouth_loss)
+                + (B2A_id_nose_loss + B2A_id_Reyes_loss + B2A_id_Leyes_loss + B2A_id_mouth_loss) + tf.reduce_mean(tf.math.abs(fake_B[0] - B_images)) + tf.reduce_mean(tf.math.abs(fake_A[0] - A_images))
         d_loss = D_GAN_loss
 
     g_grads = g_tape.gradient(g_loss, A2B_generator.trainable_variables + B2A_generator.trainable_variables)
@@ -432,32 +432,29 @@ def cal_loss(A2B_generator, B2A_generator, A_dis, B_dis,
 
 def main():
     # 모델 정의 위치를 테스트 할 떄와 학습할 때에 각각 정의해주어야한다.
+    A2B_generator = New_netowrk_for_generation(input_shape=(FLAGS.img_size, 
+                                                            FLAGS.img_size, 
+                                                            FLAGS.img_ch))
+    B2A_generator = New_netowrk_for_generation(input_shape=(FLAGS.img_size, 
+                                                            FLAGS.img_size, 
+                                                            FLAGS.img_ch))
+    A_dis = Discriminator(input_shape=(FLAGS.img_size, FLAGS.img_size, FLAGS.img_ch))
+    B_dis = Discriminator(input_shape=(FLAGS.img_size, FLAGS.img_size, FLAGS.img_ch))
+
+    A2B_generator.summary()
+    A_dis.summary()
+
+    if FLAGS.pre_checkpoint:
+        ckpt = tf.train.Checkpoint(A2B_generator=A2B_generator,
+                                    B2A_generator=B2A_generator,
+                                    g_optim=g_optim,
+                                    d_optim=d_optim)
+        ckpt_manager = tf.train.CheckpointManager(ckpt, FLAGS.pre_checkpoint_path, 5)
+        if ckpt_manager.latest_checkpoint:
+            ckpt.restore(ckpt_manager.latest_checkpoint)
+            print("Checkpoint files are restored!!!")
 
     if FLAGS.train:
-
-        A2B_generator = New_netowrk_for_generation(input_shape=(FLAGS.img_size, 
-                                                                FLAGS.img_size, 
-                                                                FLAGS.img_ch),
-                                                   trainable=True)
-        B2A_generator = New_netowrk_for_generation(input_shape=(FLAGS.img_size, 
-                                                                FLAGS.img_size, 
-                                                                FLAGS.img_ch),
-                                                   trainable=True)
-        A_dis = Discriminator(input_shape=(FLAGS.img_size, FLAGS.img_size, FLAGS.img_ch))
-        B_dis = Discriminator(input_shape=(FLAGS.img_size, FLAGS.img_size, FLAGS.img_ch))
-
-        A2B_generator.summary()
-        A_dis.summary()
-
-        if FLAGS.pre_checkpoint:
-            ckpt = tf.train.Checkpoint(A2B_generator=A2B_generator,
-                                       B2A_generator=B2A_generator,
-                                       g_optim=g_optim,
-                                       d_optim=d_optim)
-            ckpt_manager = tf.train.CheckpointManager(ckpt, FLAGS.pre_checkpoint_path, 5)
-            if ckpt_manager.latest_checkpoint:
-                ckpt.restore(ckpt_manager.latest_checkpoint)
-                print("Checkpoint files are restored!!!")
 
         count = 0
 
@@ -523,6 +520,7 @@ def main():
                 A_16y, A_16x = tf.image.image_gradients(A_16)
                 A_16 = tf.math.add(tf.math.abs(A_16y), tf.math.abs(A_16x))
                 A_128, A_64, A_32, A_16 = A_128.numpy(), A_64.numpy(), A_32.numpy(), A_16.numpy()
+                te_A_128, te_A_64, te_A_32, te_A_16 = A_128, A_64, A_32, A_16
 
                 B_128, B_64, B_32, B_16 = B_img_list[1:]
                 B_128y, B_128x = tf.image.image_gradients(B_128)
@@ -534,6 +532,7 @@ def main():
                 B_16y, B_16x = tf.image.image_gradients(B_16)
                 B_16 = tf.math.add(tf.math.abs(B_16y), tf.math.abs(B_16x))
                 B_128, B_64, B_32, B_16 = B_128.numpy(), B_64.numpy(), B_32.numpy(), B_16.numpy()
+                te_B_128, te_B_64, te_B_32, te_B_16 = B_128, B_64, B_32, B_16
 
                 for j in range(FLAGS.batch_size):
                     for i in range(9):  # nose
@@ -581,17 +580,12 @@ def main():
                 print(g_loss, d_loss, count)
 
                 if count % 100 == 0:
-                    A2B_generator_test = New_netowrk_for_generation(input_shape=(FLAGS.img_size, 
-                                                                            FLAGS.img_size, 
-                                                                            FLAGS.img_ch),
-                                                                    trainable=False)
-                    B2A_generator_test = New_netowrk_for_generation(input_shape=(FLAGS.img_size, 
-                                                                            FLAGS.img_size, 
-                                                                            FLAGS.img_ch),
-                                                                    trainable=False)
-
-                    fake_B = run_model(A2B_generator_test, A_imgs, False)
-                    fake_A = run_model(B2A_generator_test, B_imgs, False)
+                    # 학습은 되고 있는데, 이미지가 변하지 않는건.. 아마 model을 각각 따로 써줘서 그럴수도있다.
+                    # 그냥 학습과 똑같이 입력을 여러개로 진행할까?? 한번 생각해보자! 내일꼭!!!! (지금으로서는 거의 80%가 모델을 따로줘서 학습된 웨이트가 제대로 안들어가는것같다)
+                    # 이렇게 되면 generator 모델안에 trainable 에 대한 인퍼런스를 제거해야한다.
+                    # 입력을 매번 이런식으로...????
+                    fake_B = run_model(A2B_generator, [A_imgs, te_A_128, te_A_64, te_A_32, te_A_16], False) # 우선은 실험만 해보자
+                    fake_A = run_model(B2A_generator, [B_imgs, te_B_128, te_B_64, te_B_32, te_B_16], False)
 
                     plt.imsave("C:/Users/Yuhwan/Pictures/sample_images/fake_B_{}.png".format(count), fake_B[0][0].numpy() * 0.5 + 0.5)
                     plt.imsave("C:/Users/Yuhwan/Pictures/sample_images/fake_A_{}.png".format(count), fake_A[0][0].numpy() * 0.5 + 0.5)
