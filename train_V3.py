@@ -53,6 +53,8 @@ FLAGS(sys.argv)
 g_optim = tf.keras.optimizers.Adam(FLAGS.lr)
 d_optim = tf.keras.optimizers.Adam(FLAGS.lr)
 
+
+
 def nose_coordinate_box(a1, a2, a3, a4):
 
     xmin, ymin = a2[0], a1[1]
@@ -340,9 +342,9 @@ def cal_loss(A2B_generator, B2A_generator, A_dis, B_dis,
         fake_B_128_nose = tf.image.crop_to_bounding_box(fake_B[3], int(B_nose_box[0][0]), int(B_nose_box[0][1]), int(B_nose_box[0][2] - B_nose_box[0][0]), int(B_nose_box[0][3] - B_nose_box[0][1]))
         fake_B_64_nose = tf.image.crop_to_bounding_box(fake_B[2], int(B_nose_box[1][0]), int(B_nose_box[1][1]), int(B_nose_box[1][2] - B_nose_box[1][0]), int(B_nose_box[1][3] - B_nose_box[1][1]))
         fake_B_32_nose = tf.image.crop_to_bounding_box(fake_B[1], int(B_nose_box[2][0]), int(B_nose_box[2][1]), int(B_nose_box[2][2] - B_nose_box[2][0]), int(B_nose_box[2][3] - B_nose_box[2][1]))
-        A2B_id_nose_loss = tf.reduce_mean(tf.math.abs(fake_B_128_nose - real_B_all_part[0][0])) \
-                         + tf.reduce_mean(tf.math.abs(fake_B_64_nose - real_B_all_part[0][1])) \
-                         + tf.reduce_mean(tf.math.abs(fake_B_32_nose - real_B_all_part[0][2]))
+        A2B_id_nose_loss = tf.reduce_mean(tf.math.abs(fake_B_128_nose - real_B_all_part[0][0])) * 0.8 \
+                         + tf.reduce_mean(tf.math.abs(fake_B_64_nose - real_B_all_part[0][1])) * 0.4 \
+                         + tf.reduce_mean(tf.math.abs(fake_B_32_nose - real_B_all_part[0][2])) * 0.2
         
         fake_B_128_Reyes = tf.image.crop_to_bounding_box(fake_B[3], int(B_eyes_box[0][0][0]), int(B_eyes_box[0][0][1]), int(B_eyes_box[0][0][2] - B_eyes_box[0][0][0]), int(B_eyes_box[0][0][3] - B_eyes_box[0][0][1]))
         fake_B_128_Leyes = tf.image.crop_to_bounding_box(fake_B[3], int(B_eyes_box[0][1][0]), int(B_eyes_box[0][1][1]), int(B_eyes_box[0][1][2] - B_eyes_box[0][1][0]), int(B_eyes_box[0][1][3] - B_eyes_box[0][1][1]))
@@ -350,28 +352,28 @@ def cal_loss(A2B_generator, B2A_generator, A_dis, B_dis,
         fake_B_64_Leyes = tf.image.crop_to_bounding_box(fake_B[2], int(B_eyes_box[1][1][0]), int(B_eyes_box[1][1][1]), int(B_eyes_box[1][1][2] - B_eyes_box[1][1][0]), int(B_eyes_box[1][1][3] - B_eyes_box[1][1][1]))
         fake_B_32_Reyes = tf.image.crop_to_bounding_box(fake_B[1], int(B_eyes_box[2][0][0]), int(B_eyes_box[2][0][1]), int(B_eyes_box[2][0][2] - B_eyes_box[2][0][0]), int(B_eyes_box[2][0][3] - B_eyes_box[2][0][1]))
         fake_B_32_Leyes = tf.image.crop_to_bounding_box(fake_B[1], int(B_eyes_box[2][1][0]), int(B_eyes_box[2][1][1]), int(B_eyes_box[2][1][2] - B_eyes_box[2][1][0]), int(B_eyes_box[2][1][3] - B_eyes_box[2][1][1]))
-        A2B_id_Reyes_loss = tf.reduce_mean(tf.math.abs(fake_B_128_Reyes - real_B_all_part[1][0])) \
-                          + tf.reduce_mean(tf.math.abs(fake_B_64_Reyes - real_B_all_part[1][1])) \
-                          + tf.reduce_mean(tf.math.abs(fake_B_32_Reyes - real_B_all_part[1][2]))
-        A2B_id_Leyes_loss = tf.reduce_mean(tf.math.abs(fake_B_128_Leyes - real_B_all_part[2][0])) \
-                          + tf.reduce_mean(tf.math.abs(fake_B_64_Leyes - real_B_all_part[2][1])) \
-                          + tf.reduce_mean(tf.math.abs(fake_B_32_Leyes - real_B_all_part[2][2]))
+        A2B_id_Reyes_loss = tf.reduce_mean(tf.math.abs(fake_B_128_Reyes - real_B_all_part[1][0])) * 0.8 \
+                          + tf.reduce_mean(tf.math.abs(fake_B_64_Reyes - real_B_all_part[1][1])) * 0.4 \
+                          + tf.reduce_mean(tf.math.abs(fake_B_32_Reyes - real_B_all_part[1][2])) * 0.2
+        A2B_id_Leyes_loss = tf.reduce_mean(tf.math.abs(fake_B_128_Leyes - real_B_all_part[2][0])) * 0.8 \
+                          + tf.reduce_mean(tf.math.abs(fake_B_64_Leyes - real_B_all_part[2][1])) * 0.4 \
+                          + tf.reduce_mean(tf.math.abs(fake_B_32_Leyes - real_B_all_part[2][2])) * 0.2
 
         fake_B_128_mouth = tf.image.crop_to_bounding_box(fake_B[3], int(B_mouth_box[0][0]), int(B_mouth_box[0][1]), int(B_mouth_box[0][2] - B_mouth_box[0][0]), int(B_mouth_box[0][3] - B_mouth_box[0][1]))
         fake_B_64_mouth = tf.image.crop_to_bounding_box(fake_B[2], int(B_mouth_box[1][0]), int(B_mouth_box[1][1]), int(B_mouth_box[1][2] - B_mouth_box[1][0]), int(B_mouth_box[1][3] - B_mouth_box[1][1]))
         fake_B_32_mouth = tf.image.crop_to_bounding_box(fake_B[1], int(B_mouth_box[2][0]), int(B_mouth_box[2][1]), int(B_mouth_box[2][2] - B_mouth_box[2][0]), int(B_mouth_box[2][3] - B_mouth_box[2][1]))
-        A2B_id_mouth_loss = tf.reduce_mean(tf.math.abs(fake_B_128_mouth - real_B_all_part[3][0])) \
-                          + tf.reduce_mean(tf.math.abs(fake_B_64_mouth - real_B_all_part[3][1])) \
-                          + tf.reduce_mean(tf.math.abs(fake_B_32_mouth - real_B_all_part[3][2]))
+        A2B_id_mouth_loss = tf.reduce_mean(tf.math.abs(fake_B_128_mouth - real_B_all_part[3][0])) * 0.8 \
+                          + tf.reduce_mean(tf.math.abs(fake_B_64_mouth - real_B_all_part[3][1])) * 0.4 \
+                          + tf.reduce_mean(tf.math.abs(fake_B_32_mouth - real_B_all_part[3][2])) * 0.2
 
         ################################################################################################################################################################################################################
 
         fake_A_128_nose = tf.image.crop_to_bounding_box(fake_A[3], int(A_nose_box[0][0]), int(A_nose_box[0][1]), int(A_nose_box[0][2] - A_nose_box[0][0]), int(A_nose_box[0][3] - A_nose_box[0][1]))
         fake_A_64_nose = tf.image.crop_to_bounding_box(fake_A[2], int(A_nose_box[1][0]), int(A_nose_box[1][1]), int(A_nose_box[1][2] - A_nose_box[1][0]), int(A_nose_box[1][3] - A_nose_box[1][1]))
         fake_A_32_nose = tf.image.crop_to_bounding_box(fake_A[1], int(A_nose_box[2][0]), int(A_nose_box[2][1]), int(A_nose_box[2][2] - A_nose_box[2][0]), int(A_nose_box[2][3] - A_nose_box[2][1]))
-        B2A_id_nose_loss = tf.reduce_mean(tf.math.abs(fake_A_128_nose - real_A_all_part[0][0])) \
-                         + tf.reduce_mean(tf.math.abs(fake_A_64_nose - real_A_all_part[0][1])) \
-                         + tf.reduce_mean(tf.math.abs(fake_A_32_nose - real_A_all_part[0][2]))
+        B2A_id_nose_loss = tf.reduce_mean(tf.math.abs(fake_A_128_nose - real_A_all_part[0][0])) * 0.8 \
+                         + tf.reduce_mean(tf.math.abs(fake_A_64_nose - real_A_all_part[0][1])) * 0.4 \
+                         + tf.reduce_mean(tf.math.abs(fake_A_32_nose - real_A_all_part[0][2])) * 0.2
         
         fake_A_128_Reyes = tf.image.crop_to_bounding_box(fake_A[3], int(A_eyes_box[0][0][0]), int(A_eyes_box[0][0][1]), int(A_eyes_box[0][0][2] - A_eyes_box[0][0][0]), int(A_eyes_box[0][0][3] - A_eyes_box[0][0][1]))
         fake_A_128_Leyes = tf.image.crop_to_bounding_box(fake_A[3], int(A_eyes_box[0][1][0]), int(A_eyes_box[0][1][1]), int(A_eyes_box[0][1][2] - A_eyes_box[0][1][0]), int(A_eyes_box[0][1][3] - A_eyes_box[0][1][1]))
@@ -379,21 +381,22 @@ def cal_loss(A2B_generator, B2A_generator, A_dis, B_dis,
         fake_A_64_Leyes = tf.image.crop_to_bounding_box(fake_A[2], int(A_eyes_box[1][1][0]), int(A_eyes_box[1][1][1]), int(A_eyes_box[1][1][2] - A_eyes_box[1][1][0]), int(A_eyes_box[1][1][3] - A_eyes_box[1][1][1]))
         fake_A_32_Reyes = tf.image.crop_to_bounding_box(fake_A[1], int(A_eyes_box[2][0][0]), int(A_eyes_box[2][0][1]), int(A_eyes_box[2][0][2] - A_eyes_box[2][0][0]), int(A_eyes_box[2][0][3] - A_eyes_box[2][0][1]))
         fake_A_32_Leyes = tf.image.crop_to_bounding_box(fake_A[1], int(A_eyes_box[2][1][0]), int(A_eyes_box[2][1][1]), int(A_eyes_box[2][1][2] - A_eyes_box[2][1][0]), int(A_eyes_box[2][1][3] - A_eyes_box[2][1][1]))
-        B2A_id_Reyes_loss = tf.reduce_mean(tf.math.abs(fake_A_128_Reyes - real_A_all_part[1][0])) \
-                          + tf.reduce_mean(tf.math.abs(fake_A_64_Reyes - real_A_all_part[1][1])) \
-                          + tf.reduce_mean(tf.math.abs(fake_A_32_Reyes - real_A_all_part[1][2]))
-        B2A_id_Leyes_loss = tf.reduce_mean(tf.math.abs(fake_A_128_Leyes - real_A_all_part[2][0])) \
-                          + tf.reduce_mean(tf.math.abs(fake_A_64_Leyes - real_A_all_part[2][1])) \
-                          + tf.reduce_mean(tf.math.abs(fake_A_32_Leyes - real_A_all_part[2][2]))
+        B2A_id_Reyes_loss = tf.reduce_mean(tf.math.abs(fake_A_128_Reyes - real_A_all_part[1][0])) * 0.8 \
+                          + tf.reduce_mean(tf.math.abs(fake_A_64_Reyes - real_A_all_part[1][1])) * 0.4 \
+                          + tf.reduce_mean(tf.math.abs(fake_A_32_Reyes - real_A_all_part[1][2])) * 0.2
+        B2A_id_Leyes_loss = tf.reduce_mean(tf.math.abs(fake_A_128_Leyes - real_A_all_part[2][0])) * 0.8 \
+                          + tf.reduce_mean(tf.math.abs(fake_A_64_Leyes - real_A_all_part[2][1])) * 0.4 \
+                          + tf.reduce_mean(tf.math.abs(fake_A_32_Leyes - real_A_all_part[2][2])) * 0.2
 
         fake_A_128_mouth = tf.image.crop_to_bounding_box(fake_A[3], int(A_mouth_box[0][0]), int(A_mouth_box[0][1]), int(A_mouth_box[0][2] - A_mouth_box[0][0]), int(A_mouth_box[0][3] - A_mouth_box[0][1]))
         fake_A_64_mouth = tf.image.crop_to_bounding_box(fake_A[2], int(A_mouth_box[1][0]), int(A_mouth_box[1][1]), int(A_mouth_box[1][2] - A_mouth_box[1][0]), int(A_mouth_box[1][3] - A_mouth_box[1][1]))
         fake_A_32_mouth = tf.image.crop_to_bounding_box(fake_A[1], int(A_mouth_box[2][0]), int(A_mouth_box[2][1]), int(A_mouth_box[2][2] - A_mouth_box[2][0]), int(A_mouth_box[2][3] - A_mouth_box[2][1]))
-        B2A_id_mouth_loss = tf.reduce_mean(tf.math.abs(fake_A_128_mouth - real_A_all_part[3][0])) \
-                          + tf.reduce_mean(tf.math.abs(fake_A_64_mouth - real_A_all_part[3][1])) \
-                          + tf.reduce_mean(tf.math.abs(fake_A_32_mouth - real_A_all_part[3][2]))
+        B2A_id_mouth_loss = tf.reduce_mean(tf.math.abs(fake_A_128_mouth - real_A_all_part[3][0])) * 0.8 \
+                          + tf.reduce_mean(tf.math.abs(fake_A_64_mouth - real_A_all_part[3][1])) * 0.4 \
+                          + tf.reduce_mean(tf.math.abs(fake_A_32_mouth - real_A_all_part[3][2])) * 0.2
 
-        Cycleloss = (tf.reduce_mean(tf.math.abs(fake_A_[0] - A_images)) + tf.reduce_mean(tf.math.abs(fake_B_[0] - B_images))) * 10.0
+        Cycleloss = (tf.reduce_mean(tf.math.abs(fake_A_[0] - A_images)) + tf.reduce_mean(tf.math.abs(fake_B_[0] - B_images)))
+        # 이 CycleLOss를 고쳐야 할 것 같다. 왜냐하면
         G_GAN_loss = tf.reduce_mean((DA_part_fake[0] - tf.ones_like(DA_part_fake[0]))**2) \
                    + tf.reduce_mean((DA_part_fake[1] - tf.ones_like(DA_part_fake[1]))**2) \
                    + tf.reduce_mean((DA_part_fake[2] - tf.ones_like(DA_part_fake[2]))**2) \
