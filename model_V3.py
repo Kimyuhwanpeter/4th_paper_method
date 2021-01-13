@@ -35,8 +35,8 @@ class Down_input(tf.keras.layers.Layer):
 
     def call(self, layer_input, img_input):
 
-        x = tf.keras.layers.Add()([layer_input, img_input])
-        #x = layer_input * img_input
+        #x = tf.keras.layers.Add()([layer_input, img_input])
+        x = layer_input * img_input
 
         return x
 
@@ -96,7 +96,7 @@ def New_netowrk_for_generation(input_shape=(256, 256, 3)):
     for _ in range(1):
         h = residual_block(h, 32)   # [128, 128, 64]
     C1 = h
-
+    
     h = tf.keras.layers.Conv2D(filters=128,
                                kernel_size=3,
                                strides=2,
